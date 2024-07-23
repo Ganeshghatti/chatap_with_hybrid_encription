@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat Rooms</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          colors: {
+            darkblue: "#184B81",
+            lightblue: "#279DD7",
+          },
+          extend: {
+            screens: {
+              sm: { max: "639px" },
+              md: { max: "866px" },
+              lg: { min: "867px", max: "1100px" },
+              xl: { min: "1100px", max: "1279px" },
+              "2xl": { min: "1280px", max: "1335px" },
+            },
+          },
+        },
+        darkMode: "class",
+        plugins: [],
+      };
+    </script>
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'chatstyles.css' %}" />
+
+    <style>
+      #homepage {
+        background-image: url("../static/media/Homebg.jpg");
+      }
+    </style>
+  </head>
+  <body>
+    <section
+      id="homepage"
+      class="flex justify-around w-screen h-screen items-center"
+    >
+      <div class="w-1/3 flex items-center justify-center md:hidden">
+        <div class="flex gap-4 items-center">
+          {% load static %}
+          <img src="{% static '/chat/static/logoFav.png' %}" alt="logo" />
+
+          <img src="{% static 'logoFav.png' %}" alt="logo" />
+          <h1 class="text-darkblue text-5xl font-bold md:text-4xl">
+            CipherTalk
+          </h1>
+        </div>
+      </div>
+      <div class="flex justify-center items-center w-1/3">
+        <div
+          class="flex flex-col gap-4 items-center justify-center p-4 h-3/4 test border"
+        >
+          <h1 class="text-white text-5xl md:text-4xl">Chat Rooms</h1>
+          <input
+            id="room-name-input"
+            class="mb-4 p-2"
+            placeholder="Enter room name"
+          />
+          <button id="room-name-submit" class="bg-red-500 text-white p-2">
+            Enter
+          </button>
+        </div>
+      </div>
+    </section>
+    {% comment %} <script>
+      async function fetchRandomImage() {
+        try {
+          const response = await fetch(
+            "https://api.unsplash.com/photos/random?client_id=oQx5KBoaabYxtQgxuqdH8FgqBZ7Br0l7DzW6SDrV9Jk&query=chat-room"
+          );
+          const data = await response.json();
+          console.log(data);
+          const imageUrl = data.urls.full;
+          document.getElementById(
+            "homepage"
+          ).style.backgroundImage = `url(${imageUrl})`;
+          document.getElementById("homepage").style.backgroundSize = "cover";
+        } catch (error) {
+          console.error("Error fetching the image:", error);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchRandomImage);
+
+      document.querySelector("#room-name-submit").onclick = function () {
+        const roomName = document.querySelector("#room-name-input").value;
+        window.location.pathname = "/chat/" + roomName + "/";
+      };
+    </script> {% endcomment %}
+  </body>
+</html>
