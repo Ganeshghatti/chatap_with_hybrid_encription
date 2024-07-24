@@ -1,102 +1,411 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>File Encryption and Decryption</title>
+  <head>
+    <title>Encryption and Decryption</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          colors: {
+            darkblue: "#184B81",
+            lightblue: "#279DD7",
+            white: "#fff",
+          },
+          extend: {
+            screens: {
+              sm: { max: "639px" },
+              md: { max: "866px" },
+              lg: { min: "867px", max: "1100px" },
+              xl: { min: "1100px", max: "1279px" },
+              "2xl": { min: "1280px", max: "1335px" },
+            },
+          },
+        },
+        darkMode: "class",
+        plugins: [],
+      };
+    </script>
     <style>
-        .border {
-            border: 1px solid red;
-        }
-        .border-black {
-            border: 1px solid black;
-        }
-        .border-grey {
-            border: 1px solid #323232;
-        }
+      body {
+        font-family: "Roboto", sans-serif;
+      }
+      .border-black {
+        border: 1px solid black;
+      }
+      .border-lightblue {
+        border: 1px solid #279dd7;
+      }
+      #file_enc {
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-image: url("https://firebasestorage.googleapis.com/v0/b/hybridencription.appspot.com/o/file_enc_bg.jpg?alt=media&token=d6827467-f9ee-42be-ae01-267f2ff32485");
+        background-position: center;
+      }
     </style>
-</head>
-<body>
-    <section class="flex w-screen h-screen justify-center items-center">
-        <div class="flex w-2/3 bg-white p-8 rounded-lg shadow-lg justify-between">
-            <!-- Encryption Section -->
-            <div class="flex flex-col gap-5 w-1/2">
-                <h1 class="text-2xl font-bold mb-4">File Encryption</h1>
-                <input type="file" id="file-input" class="border p-2" />
-                <button id="file-encrypt" class="bg-blue-500 text-white p-2 rounded">Encrypt</button>
-            </div>
-
-            <!-- Decryption Section -->
-            <div class="flex flex-col gap-5 w-1/2">
-                <h1 class="text-2xl font-bold mb-4">File Decryption</h1>
-                <input type="file" id="file-decrypt-input" class="border p-2" />
-                <input id="decrypt-key" class="border p-2" placeholder="Enter decryption key" />
-                <button id="file-decrypt" class="bg-blue-500 text-white p-2 rounded">Decrypt</button>
-            </div>
+  </head>
+  <body>
+    <section
+      id="file_enc"
+      class="w-screen h-screen flex items-center justify-center"
+    >
+      <!-- Encryption Section -->
+      <div
+        class="w-1/2 flex flex-col h-full justify-center items-center border-r-1"
+      >
+        <div
+          class="flex flex-col gap-2 justify-center items-center bg-white p-4 shadow-md"
+        >
+          <h2 class="text-xl font-semibold mb-4">File Encryption</h2>
+          <form
+            id="encryption-form"
+            method="post"
+            enctype="multipart/form-data"
+          >
+            {% csrf_token %}
+            <input
+              type="file"
+              id="file-input"
+              name="file"
+              class="border p-2 mb-4 w-full"
+            />
+            <button
+              type="submit"
+              class="bg-white w-full text-black p-2 border-lightblue"
+            >
+              Encrypt
+            </button>
+          </form>
         </div>
+      </div>
+
+      <!-- Decryption Section -->
+      <div
+        class="w-1/2 flex h-full flex-col justify-center items-center border-l-1"
+      >
+        <div
+          class="flex flex-col gap-2 justify-center items-center bg-white p-4 shadow-md"
+        >
+          <h2 class="text-xl font-semibold mb-4">File Decryption</h2>
+          <form
+            id="decryption-form"
+            method="post"
+            enctype="multipart/form-data"
+          >
+            {% csrf_token %}
+            <input
+              type="file"
+              id="file-decrypt-input"
+              name="encrypted_file"
+              class="border p-2 mb-4 w-full"
+            />
+
+            <button type="submit" class="bg-lightblue w-full text-white p-2">
+              Decrypt
+            </button>
+          </form>
+        </div>
+      </div>
     </section>
     <script>
-        document.getElementById("file-encrypt").addEventListener("click", () => {
-            console.log("Encript")
-            const fileInput = document.getElementById("file-input");
-            const file = fileInput.files[0];
-            console.log(file)
-            if (!file) {
-                alert("Please select a file to encrypt.");
-                return;
-            }
+      document
+        .getElementById("encryption-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fileInput = document.getElementById("file-input");
+          const file = fileInput.files[0];
+          if (!file) {
+            alert("Please select a file to encrypt.");
+            return;
+          }
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const fileContent = e.target.result;
-                const key = prompt("Enter encryption key:");
-                if (key) {
-                    const encryptedContent = hybridEncrypt(fileContent, key);
-                    const blob = new Blob([encryptedContent], { type: "application/octet-stream" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = file.name + ".enc";
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
-            };
-            reader.readAsText(file);
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const csrfToken = document.querySelector(
+            "[name=csrfmiddlewaretoken]"
+          ).value;
+
+          const response = await fetch('{% url "file" %}', {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": csrfToken,
+            },
+            body: formData,
+          });
+
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = file.name + ".enc";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } else {
+            alert("Encryption failed.");
+          }
         });
 
-        document.getElementById("file-decrypt").addEventListener("click", () => {
-            const fileInput = document.getElementById("file-decrypt-input");
-            const file = fileInput.files[0];
-            const key = document.getElementById("decrypt-key").value;
-            if (!file) {
-                alert("Please select a file to decrypt.");
-                return;
-            }
-            if (!key) {
-                alert("Please enter the decryption key.");
-                return;
-            }
+      document
+        .getElementById("decryption-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fileInput = document.getElementById("file-decrypt-input");
+          const file = fileInput.files[0];
+          if (!file) {
+            alert("Please select an encrypted file to decrypt.");
+            return;
+          }
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const fileContent = e.target.result;
-                const decryptedContent = hybridDecrypt(fileContent, key);
+          const formData = new FormData();
+          formData.append("encrypted_file", file);
 
-                if (decryptedContent) {
-                    const blob = new Blob([decryptedContent], { type: "application/octet-stream" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = file.name.replace(".enc", "");
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                } else {
-                    alert("Incorrect decryption key.");
-                }
-            };
-            reader.readAsText(file);
+          const csrfToken = document.querySelector(
+            "[name=csrfmiddlewaretoken]"
+          ).value;
+
+          const response = await fetch('{% url "decrypt_file" %}', {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": csrfToken,
+            },
+            body: formData,
+          });
+
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = file.name.replace(".enc", "");
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } else {
+            alert("Decryption failed. Invalid private key.");
+          }
         });
     </script>
-</body>
+  </body>
 </html>
+
+{% comment %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Encryption and Decryption</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          colors: {
+            darkblue: "#184B81",
+            lightblue: "#279DD7",
+            white: "#fff",
+          },
+          extend: {
+            screens: {
+              sm: { max: "639px" },
+              md: { max: "866px" },
+              lg: { min: "867px", max: "1100px" },
+              xl: { min: "1100px", max: "1279px" },
+              "2xl": { min: "1280px", max: "1335px" },
+            },
+          },
+        },
+        darkMode: "class",
+        plugins: [],
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+      }
+      .border-black {
+        border: 1px solid black;
+      }
+      .border-lightblue {
+        border: 1px solid #279dd7;
+      }
+      #file_enc {
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-image: url("https://firebasestorage.googleapis.com/v0/b/hybridencription.appspot.com/o/file_enc_bg.jpg?alt=media&token=d6827467-f9ee-42be-ae01-267f2ff32485");
+        background-position: center;
+      }
+    </style>
+  </head>
+  <body>
+    <section
+      id="file_enc"
+      class="w-screen h-screen flex items-center justify-center"
+    >
+      <!-- Encryption Section -->
+      <div
+        class="w-1/2 flex flex-col h-full justify-center items-center border-r-1"
+      >
+        <div
+          class="flex flex-col gap-2 justify-center items-center bg-white p-4 shadow-md"
+        >
+          <h2 class="text-xl font-semibold mb-4">File Encryption</h2>
+          <form
+            id="encryption-form"
+            method="post"
+            enctype="multipart/form-data"
+          >
+            {% csrf_token %}
+            <input
+              type="file"
+              id="file-input"
+              name="file"
+              class="border p-2 mb-4 w-full"
+            />
+            <button
+              type="submit"
+              class="bg-white w-full text-black p-2 border-lightblue"
+            >
+              Encrypt
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Decryption Section -->
+      <div
+        class="w-1/2 flex h-full flex-col justify-center items-center border-l-1"
+      >
+        <div
+          class="flex flex-col gap-2 justify-center items-center bg-white p-4 shadow-md"
+        >
+          <h2 class="text-xl font-semibold mb-4">File Decryption</h2>
+          <form
+            id="decryption-form"
+            method="post"
+            enctype="multipart/form-data"
+          >
+            {% csrf_token %}
+            <input
+              type="file"
+              id="file-decrypt-input"
+              name="encrypted_file"
+              class="border p-2 mb-4 w-full"
+            />
+            <input
+              type="file"
+              id="private-key-input"
+              name="private_key"
+              class="border p-2 mb-4 w-full"
+              accept=".pem"
+            />
+            <button type="submit" class="bg-lightblue w-full text-white p-2">
+              Decrypt
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+    <script>
+      document
+        .getElementById("encryption-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fileInput = document.getElementById("file-input");
+          const file = fileInput.files[0];
+          if (!file) {
+            alert("Please select a file to encrypt.");
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const csrfToken = document.querySelector(
+            "[name=csrfmiddlewaretoken]"
+          ).value;
+
+          const response = await fetch('{% url "file" %}', {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": csrfToken,
+            },
+            body: formData,
+          });
+
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = file.name + ".enc";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } else {
+            alert("Encryption failed.");
+          }
+        });
+
+      document
+        .getElementById("decryption-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fileInput = document.getElementById("file-decrypt-input");
+          const file = fileInput.files[0];
+          const keyInput = document.getElementById("private-key-input");
+          const keyFile = keyInput.files[0];
+
+          if (!file) {
+            alert("Please select an encrypted file to decrypt.");
+            return;
+          }
+          if (!keyFile) {
+            alert("Please select your private key file.");
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("encrypted_file", file);
+          formData.append("private_key", keyFile);
+
+          const csrfToken = document.querySelector(
+            "[name=csrfmiddlewaretoken]"
+          ).value;
+
+          const response = await fetch('{% url "decrypt_file" %}', {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": csrfToken,
+            },
+            body: formData,
+          });
+
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = file.name.replace(".enc", "");
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } else {
+            alert("Decryption failed. Invalid private key.");
+          }
+        });
+    </script>
+  </body>
+</html>
+{% endcomment %}
