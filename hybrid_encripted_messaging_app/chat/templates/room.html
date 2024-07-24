@@ -1,50 +1,179 @@
-{% load static %}
-
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Chat Room</title>
-    <link rel="stylesheet" href="{% static 'myfirst.css' %}">
-
-</head>
-<body>
-    <h1>Room: {{ room_name }}</h1>
-    <div id="chat-log"></div>
-    <input id="chat-message-input" type="text" size="100">
-    <button id="chat-message-submit">Send</button>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          colors: {
+            darkblue: "#184B81",
+            lightblue: "#279DD7",
+            white: "#fff",
+          },
+          extend: {
+            screens: {
+              sm: { max: "639px" },
+              md: { max: "866px" },
+              lg: { min: "867px", max: "1100px" },
+              xl: { min: "1100px", max: "1279px" },
+              "2xl": { min: "1280px", max: "1335px" },
+            },
+          },
+        },
+        darkMode: "class",
+        plugins: [],
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+      }
+      .border {
+        border: 1px solid red;
+      }
+      .border-black {
+        border: 1px solid black;
+      }
+      .border-grey {
+        border: 1px solid #d3d2d2;
+      }
+      .room-title-div {
+        background: rgba(141, 141, 141, 0.87);
+        border-bottom: 1px solid #d3d2d2;
+      }
+      .room-title {
+        color: #303030;
+        font-family: Roboto;
+        font-size: 25px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        letter-spacing: 1.25px;
+      }
+      .homepage-gradient {
+        background-color: rgb(0, 0, 0, 0.5);
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+      #chat-message-input {
+        border-radius: 25px;
+        background: rgba(239, 246, 252, 0.87);
+      }
+      .room-gradientbg {
+        background-image: url("https://firebasestorage.googleapis.com/v0/b/hybridencription.appspot.com/o/chat_bg.png?alt=media&token=f1e7b14e-9118-4fcd-a520-26b3dc73235a");
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+      .message {
+        padding: 8px 12px;
+        margin: 8px 0;
+        border-radius: 20px;
+        max-width: 60%;
+        display: flex;
+        flex-direction: column;
+      }
+      .message-sent {
+        background-color: #279dd7;
+        align-self: flex-end;
+        color: white;
+      }
+      .message-received {
+        background-color: #d3d2d2;
+        align-self: flex-start;
+      }
+      .message-name {
+        font-weight: medium;
+        font-size: 10px;
+        color: #184b81;
+      }
+    </style>
+  </head>
+  <body>
+    <section
+      id="room"
+      class="w-screen h-screen flex justify-center items-center"
+    >
+      <div class="flex flex-col w-1/3 md:w-full h-screen py-2 border-grey">
+        <div class="bg-white w-full py-4 px-4 flex room-title-div items-center gap-4">
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/hybridencription.appspot.com/o/profilepic.png?alt=media&token=099bbf76-027b-44c0-96d4-2a1cd2c7d59f"
+            alt=""
+          />
+          <h3 class="room-title">{{ room_name }}</h3>
+        </div>
+        <div
+          class="room-gradientbg flex-1 flex w-full flex-col justify-end items-center"
+        >
+          <div id="chat-log" class="flex flex-col w-11/12"></div>
+          <div
+            class="self-center flex gap-1 items-center w-11/12 justify-around flex"
+          >
+            <input
+              id="chat-message-input"
+              type="text"
+              class="border-grey pl-4 pr-3 py-2 flex-1"
+              placeholder="Type your message here..."
+            />
+            <button
+              id="chat-message-submit"
+              class="rounded-full bg-lightblue p-2"
+            >
+              <img
+                src="https://firebasestorage.googleapis.com/v0/b/hybridencription.appspot.com/o/sendicon.png?alt=media&token=3d9bc0d9-700d-4944-9459-3d961235fbab"
+                alt="send"
+                class="w-6 object-contain"
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <script>
-        const roomName = "{{ room_name }}";
-        const chatSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
-            
+      const name = localStorage.getItem("username") || "Anonymous";
+      const roomName = "{{ room_name }}";
+      const chatSocket = new WebSocket(
+        "ws://" + window.location.host + "/ws/chat/" + roomName + "/"
+      );
+
+      chatSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        const chatLog = document.querySelector("#chat-log");
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message");
+        if (data.name === name) {
+          messageElement.classList.add("message-sent");
+          messageElement.innerHTML = `<div>${data.message}</div>`;
+        } else {
+          messageElement.classList.add("message-received");
+          messageElement.innerHTML = `<div class="message-name">${data.name}</div><div>${data.message}</div>`;
+        }
+        chatLog.appendChild(messageElement);
+      };
+
+      chatSocket.onclose = function (e) {
+        console.error("Chat socket closed unexpectedly");
+      };
+
+      document.querySelector("#chat-message-input").focus();
+      document.querySelector("#chat-message-input").onkeyup = function (e) {
+        if (e.keyCode === 13) {
+          document.querySelector("#chat-message-submit").click();
+        }
+      };
+
+      document.querySelector("#chat-message-submit").onclick = function (e) {
+        const messageInputDom = document.querySelector("#chat-message-input");
+        const message = messageInputDom.value;
+        chatSocket.send(
+          JSON.stringify({
+            name: name,
+            message: message,
+          })
         );
-
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            const chatLog = document.querySelector('#chat-log');
-            chatLog.innerHTML += `<div>${data.message}</div>`;
-        };
-
-        chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
-        };
-
-        document.querySelector('#chat-message-input').focus();
-        document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.keyCode === 13) {
-                document.querySelector('#chat-message-submit').click();
-            }
-        };
-
-        document.querySelector('#chat-message-submit').onclick = function(e) {
-            const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
-            chatSocket.send(JSON.stringify({
-                'message': message
-            }));
-            messageInputDom.value = '';
-        };
+        messageInputDom.value = "";
+      };
     </script>
-</body>
+  </body>
 </html>

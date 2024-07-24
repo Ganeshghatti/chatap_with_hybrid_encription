@@ -1,6 +1,5 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from .crypto_utils import encrypt_message, decrypt_message, private_key, public_key
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -22,33 +21,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
+    # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
+        name = text_data_json['name']
         message = text_data_json['message']
-
-        # Encrypt the message
-        iv, encrypted_message, enc_session_key = encrypt_message(message, public_key)
 
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': encrypted_message,
-                'iv': iv,
-                'enc_session_key': enc_session_key
+                'name': name,
+                'message': message
             }
         )
 
+    # Receive message from room group
     async def chat_message(self, event):
-        encrypted_message = event['message']
-        iv = event['iv']
-        enc_session_key = event['enc_session_key']
-
-        # Decrypt the message
-        message = decrypt_message(iv, encrypted_message, enc_session_key, private_key)
+        message = event['message']
+        name = event['name']
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
+            'name': name,
             'message': message
         }))

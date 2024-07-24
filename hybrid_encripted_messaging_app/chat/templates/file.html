@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Encryption and Decryption</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .border {
+            border: 1px solid red;
+        }
+        .border-black {
+            border: 1px solid black;
+        }
+        .border-grey {
+            border: 1px solid #323232;
+        }
+    </style>
+</head>
+<body>
+    <section class="flex w-screen h-screen justify-center items-center">
+        <div class="flex w-2/3 bg-white p-8 rounded-lg shadow-lg justify-between">
+            <!-- Encryption Section -->
+            <div class="flex flex-col gap-5 w-1/2">
+                <h1 class="text-2xl font-bold mb-4">File Encryption</h1>
+                <input type="file" id="file-input" class="border p-2" />
+                <button id="file-encrypt" class="bg-blue-500 text-white p-2 rounded">Encrypt</button>
+            </div>
+
+            <!-- Decryption Section -->
+            <div class="flex flex-col gap-5 w-1/2">
+                <h1 class="text-2xl font-bold mb-4">File Decryption</h1>
+                <input type="file" id="file-decrypt-input" class="border p-2" />
+                <input id="decrypt-key" class="border p-2" placeholder="Enter decryption key" />
+                <button id="file-decrypt" class="bg-blue-500 text-white p-2 rounded">Decrypt</button>
+            </div>
+        </div>
+    </section>
+    <script>
+        document.getElementById("file-encrypt").addEventListener("click", () => {
+            console.log("Encript")
+            const fileInput = document.getElementById("file-input");
+            const file = fileInput.files[0];
+            console.log(file)
+            if (!file) {
+                alert("Please select a file to encrypt.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const fileContent = e.target.result;
+                const key = prompt("Enter encryption key:");
+                if (key) {
+                    const encryptedContent = hybridEncrypt(fileContent, key);
+                    const blob = new Blob([encryptedContent], { type: "application/octet-stream" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = file.name + ".enc";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById("file-decrypt").addEventListener("click", () => {
+            const fileInput = document.getElementById("file-decrypt-input");
+            const file = fileInput.files[0];
+            const key = document.getElementById("decrypt-key").value;
+            if (!file) {
+                alert("Please select a file to decrypt.");
+                return;
+            }
+            if (!key) {
+                alert("Please enter the decryption key.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const fileContent = e.target.result;
+                const decryptedContent = hybridDecrypt(fileContent, key);
+
+                if (decryptedContent) {
+                    const blob = new Blob([decryptedContent], { type: "application/octet-stream" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = file.name.replace(".enc", "");
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                } else {
+                    alert("Incorrect decryption key.");
+                }
+            };
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
